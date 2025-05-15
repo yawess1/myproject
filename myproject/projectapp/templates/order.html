@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Order{% endblock %}
+
+{% block content %}
+
+<div class="row">
+  <div class="col-12 col-md-3 mb-3">
+    <div class="card">
+      <div class="card-header fw-bold">Categories</div>
+      <ul id="categoryList" class="list-group list-group-flush"></ul>
+    </div>
+  </div>
+  <!-- Menu List -->
+  <div class="col-12 col-md-9">
+    <div class="row" id="menuList"></div>
+  </div>
+</div>
+<div id="cart" class="mt-4">
+  <h5>Cart</h5>
+  <ul id="cartList" class="list-group mb-2"></ul>
+  <div>Total: <span id="cartTotal">0</span> USD</div>
+  <button id="submitOrder" class="btn btn-primary w-100">Submit Order</button>
+  <div id="cartEmptyTip" class="text-muted mt-2" style="display:none;">Your cart is empty.</div>
+  <div id="orderMsg" class="mt-2"></div>
+</div>
+
+<!-- Loading indicator -->
+<div id="loading" class="text-center text-muted" style="display:none;">Loading...</div>
+
+<script>
+const restaurant_id = "{{ restaurant.id }}";
+const table_id = "{{ table.id }}";
+let cart = {};
+let currentCategory = null;
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+const CSRF = getCookie('csrftoken');
+
+async function loadCategories() {
+  showLoading(true);
+  const res = await fetch(`/myproject/api/categories/?restaurant_id=${restaurant_id}`);
+  const cats = await res.json();
+  const catList = document.getElementById('categoryList');
+  catList.innerHTML = '';
+  cats.forEach(cat => {
+    const li = document.createElement('li');
+    li.textContent = cat.name;
+    li.className = 'list-group-item' + (cat.id === currentCategory ? ' active' : '');
+    li.onclick = () => {
+      currentCategory = cat.id;
+      loadMenu(cat.id);
+      highlightCategory(cat.id);
+    };
+    li.style.cursor = 'pointer';
+    catList.appendChild(li);
+  });
+  if (cats.length > 0 && !currentCategory) {
+    currentCategory = cats[0].id;
+    loadMenu(currentCategory);
+    highlightCategory(currentCategory);
+  }
+  showLoading(false);
+}
+
+function highlightCategory(category_id) {
+  const catList = document.getElementById('categoryList').children;
+  for (let li of catList) {
+    li.classList.remove('active');
+    if (li.textContent === getCategoryNameById(category_id)) {
+      li.classList.add('active');
+    }
+  }
+}
+function getCategoryNameById(id) {
+
+  const catList = document.getElementById('categoryList').children;
+  for (let li of catList) {
+    if (li.classList.contains('active')) return li.textContent;
+  }
+  return '';
+}
+
+async function loadMenu(category_id) {
+  showLoading(true);
+  const res = await fetch(`/myproject/api/menu/?restaurant_id=${restaurant_id}&category_id=${category_id}`);
+  const menu = await res.json();
+  const menuList = document.getElementById('menuList');
+  menuList.innerHTML = '';
+  if (menu.length === 0) {
+    menuList.innerHTML = '<div class="text-muted">No items in this category.</div>';
+  }
+  menu.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'col-12 col-md-6 col-lg-4 mb-4';
+    div.innerHTML = `
+      <div class="card h-100">
+        ${item.image ? `<img src="${item.image}" class="card-img-top" style="height:180px;object-fit:cover;">` : ''}
+        <div class="card-body d-flex flex-column">
+          <h5 class="card-title">${item.name}</h5>
+          <p class="card-text flex-grow-1">${item.description || ''}</p>
+          <div class="mb-2 fw-bold text-danger">$${item.price}</div>
+          <button class="btn btn-success btn-sm mt-auto" onclick="addToCart(${item.id}, '${item.name}', ${item.price})">Add to Cart</button>
+        </div>
+      </div>
+    `;
+    menuList.appendChild(div);
+  });
+  showLoading(false);
+}
+
+function addToCart(id, name, price) {
+  if (!cart[id]) cart[id] = {name, price, qty: 0};
+  cart[id].qty += 1;
+  renderCart();
+}
+
+function renderCart() {
+  const cartList = document.getElementById('cartList');
+  cartList.innerHTML = '';
+  let total = 0;
+  if (Object.keys(cart).length === 0) {
+    document.getElementById('cartEmptyTip').style.display = '';
+  } else {
+    document.getElementById('cartEmptyTip').style.display = 'none';
+  }
+  for (const id in cart) {
+    const item = cart[id];
+    total += item.price * item.qty;
+    cartList.innerHTML += `<li class="list-group-item d-flex justify-content-between align-items-center">
+      ${item.name} x ${item.qty}
+      <span>
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${id}, -1)">-</button>
+        <button class="btn btn-sm btn-outline-secondary" onclick="changeQty(${id}, 1)">+</button>
+        <button class="btn btn-sm btn-danger" onclick="removeItem(${id})">Remove</button>
+      </span>
+    </li>`;
+  }
+  document.getElementById('cartTotal').textContent = total.toFixed(2);
+}
+
+function changeQty(id, delta) {
+  if (cart[id]) {
+    cart[id].qty += delta;
+    if (cart[id].qty <= 0) delete cart[id];
+    renderCart();
+  }
+}
+
+function removeItem(id) {
+  delete cart[id];
+  renderCart();
+}
+
+function submitOrder() {
+  if (Object.keys(cart).length === 0) {
+    alert('Cart is empty');
+    return;
+  }
+  const items = [];
+  for (const id in cart) {
+    items.push({menu_item: id, quantity: cart[id].qty});
+  }
+  fetch('/myproject/api/orders/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': CSRF,
+    },
+    body: JSON.stringify({
+      restaurant: restaurant_id,
+      table: table_id,
+      items: items
+    })
+  })
+  .then(res => res.ok ? res.json() : Promise.reject(res))
+  .then(data => {
+    document.getElementById('orderMsg').textContent = 'Order submitted successfully!';
+    cart = {};
+    renderCart();
+  })
+  .catch(() => {
+    document.getElementById('orderMsg').textContent = 'Order submission failed. Please try again.';
+  });
+  }
+
+function showLoading(show) {
+  document.getElementById('loading').style.display = show ? '' : 'none';
+}
+
+window.onload = function() {
+  loadCategories();
+  document.getElementById('submitOrder').onclick = submitOrder;
+};
+</script>
+
+{% endblock %}

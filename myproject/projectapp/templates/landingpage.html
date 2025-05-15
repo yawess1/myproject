@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Welcome to Vokke{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'projectapp/css/brand.css' %}">
+{% endblock %}
+
+{% block content %}
+<main>
+  <!--https://www.midjourney.com/jobs/72cf3b99-be57-4709-b6b3-4dad00f14446?index=0-->
+  <section class="the-background position-relative py-5 min-vh-100 d-flex align-items-center">
+    <!-- 背景图片 -->
+    <img src="{% static 'projectapp/menu_images/bg_image_cake.jpg' %}" 
+         alt="background image"
+         class="background-img position-absolute top-0 start-0 w-100 h-100">
+    <!-- 内容 -->
+    <div class="container position-relative text-white">
+        <div class="row">
+            <div class="col-lg-6">
+                <h1 class="display-1">Start Your Journey</h1>
+                <a href="{% url 'restaurant_list' %}" class="btn btn-outline-light">Your restaurants</a>
+            </div>
+        </div>
+    </div>
+  </section>
+</main>
+{% endblock %}

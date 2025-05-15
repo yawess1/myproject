@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Manage Restaurant Admins{% endblock %}
+
+{% block content %}
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>Restaurant Admin Management</h2>
+    </div>
+
+    <form method="get" class="row mb-4">
+      <div class="col-md-6 mb-3 mb-lg-0">
+        <div class="input-group">
+          <input type="text" class="form-control" name="search" placeholder="Search by username or restaurant..." value="{{ request.GET.search }}">
+          <button class="btn btn-primary" type="submit">Search</button>
+        </div>
+      </div>
+      <div class="col-md-6 text-md-end">
+        <a href="{% url 'subscriber_add' %}" class="btn btn-primary">Add New Admin</a>  
+        {# Keep using 'subscriber_add' if that's your URL name #}
+      </div>
+    </form>
+
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Profile ID</th>
+          <th>Username</th>
+          <th>Email</th>
+          <th>Restaurant Name</th>
+          <th>Restaurant Address</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for profile in users %}
+        <tr>
+          <td>{{ profile.id }}</td>
+          <td>{{ profile.user.username }}</td>
+          <td>{{ profile.user.email }}</td>
+          <td>
+            {% if profile.restaurant %}
+              {{ profile.restaurant.name }}
+            {% else %}
+              No Restaurant
+            {% endif %}
+
+          </td>
+          <td>
+            {% if profile.restaurant %}
+              {{ profile.restaurant.address }}
+            {% else %}
+              N/A
+            {% endif %}
+          </td>
+          <td>
+            <a class="btn btn-sm btn-info me-2 mb-1" href="{% url 'subscriber_edit' profile.id %}">
+                <i class="bi bi-pencil-fill"></i>
+            </a>
+            <a class="btn btn-sm btn-warning mb-1" href="{% url 'subscriber_delete' profile.id %}">
+                <i class="bi bi-dash-circle-fill"></i>
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No admins found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    {% if is_paginated %}
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for num in paginator.page_range %}
+        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+          <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ num }}">{{ num }}</a>
+        </li>
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?{% if request.GET.search %}search={{ request.GET.search }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
