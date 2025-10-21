@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-x3vf1uqn0tt&isv(bjm)w-2#r#i&h%%4xt0y+s)=!y5%_wk#g)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["infs3202-c36d3c66.uqcloud.net"]
+ALLOWED_HOSTS = ["35.188.89.15"]
 
 
 # Application definition
@@ -88,7 +88,7 @@ DATABASES = {
         'NAME': 'myproject_db',
         'USER': 'root',
         'PASSWORD': '30af44cc6a537e024290829f',
-        'HOST': 'localhost',
+        'HOST': 'db',
         'PORT': '3306',
     }
 }
@@ -167,15 +167,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # settings.py
 
-STATIC_URL = 'myproject_static/'
+STATIC_URL = '/static/'
 
 # The directory where collectstatic will place all static files
-STATIC_ROOT = "/var/www/htdocs/myproject_static/"  # This is within the Nginx web root folder
+STATIC_ROOT = "BASE_DIR / 'static'"  # This is within the Nginx web root folder
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-CSRF_TRUSTED_ORIGINS = ["https://c36d3c66.uqcloud.net", "https://infs3202-c36d3c66.uqcloud.net"]
+CSRF_TRUSTED_ORIGINS = []
 
-OPENAI_API_KEY = "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"
