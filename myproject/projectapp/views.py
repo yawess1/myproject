@@ -10,11 +10,6 @@ from django.db.models.functions import Cast
 from .forms import RestaurantAdminRegistrationForm
 from django.shortcuts import redirect
 
-from pydantic import BaseModel, Field, ValidationError
-from typing import List
-from langchain_openai import ChatOpenAI
-from langchain_core.prompts import PromptTemplate
-from langchain_core.output_parsers import JsonOutputParser
 from rest_framework.permissions import IsAuthenticated 
 
 

@@ -1,33 +1,31 @@
 services:
   db:
-    image: mariadb:11
+    image: mysql:8.0
     restart: always
     environment:
-      - MARIADB_DATABASE=myproject_db
-      - MARIADB_USER=root
-      - MARIADB_PASSWORD=30af44cc6a537e024290829f
-      - MARIADB_ROOT_PASSWORD=30af44cc6a537e024290829f
+      - MYSQL_DATABASE=myproject_db
+      - MYSQL_ROOT_PASSWORD=30af44cc6a537e024290829f
     volumes:
       - db_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -p$$MARIADB_PASSWORD || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
+    # healthcheck:
+    #   test: ["CMD-SHELL", "mysqladmin ping -h localhost || exit 1"]
+    #   interval: 10s
+    #   timeout: 5s
+    #   retries: 10
 
   web:
     build: .
     restart: always
     ports:
-      - "80:8080"
+      - "8080:8080"
     depends_on:
-      db:
-        condition: service_healthy
+      - db
     environment:
       - PORT=8080
     volumes:
-      - media:/app/media  # 如有用户上传媒体
+      - media:/app/media
 
 volumes:
   db_data:
   media:
+

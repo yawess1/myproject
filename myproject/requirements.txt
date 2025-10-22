@@ -1,3 +1,14 @@
 Django==5.2.*
 gunicorn
 mysqlclient
+djangorestframework
+django-allauth
+PyJWT
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+requests
+cryptography
+pydantic
+qrcode
+Pillow
